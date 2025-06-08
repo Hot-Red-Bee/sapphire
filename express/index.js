@@ -135,7 +135,63 @@ app.delete("/users/:userId", (req, res) => {
 
 
 // Update user by Id (PUT method)
+
+app.put("/users/:userId", (req, res) => {
+  const userId = req.params.userId;
+  const updatedUser = req.body;
+
+  // Validate the updated user data
+  if (!updatedUser.name || !updatedUser.email || !updatedUser.password || !updatedUser.age) {
+    return res
+      .status(400)
+      .json({ message: "Name, email, age, and password are required" });
+  }
+
+  if (updatedUser.age < 16) {
+    return res.status(400).json({ message: "Age must be at least 16" });
+  }
+
+  // Find the user to update
+  const userIndex = users.findIndex((user) => user.id === parseInt(userId));
+
+  if (userIndex !== -1) {
+    // Update the user
+    users[userIndex] = { id: parseInt(userId), ...updatedUser };
+    res.status(200).json(users[userIndex]);
+  } else {
+    res.status(404).json({ message: "User not found" });
+  }
+});
 // Search User (query parameter)
+
+app.get("/search", (req, res) => {
+  let { name, email, age } = req.query;
+
+  name = name?.trim().toLowerCase();
+  email = email?.trim().toLowerCase();
+  const ageInt = age ? parseInt(age) : null;
+
+  if (age && isNaN(parseInt(age))) {
+    return res.status(400).json({ message: "Invalid age parameter" });
+  }
+
+  console.log("Search query:", { name, email, age });
+
+  const filteredUsers = users.filter((user) => {
+    return (
+      (name ? user.name.toLowerCase().includes(name) : true) &&
+      (email ? user.email.toLowerCase().includes(email) : true) &&
+      (ageInt ? user.age === ageInt : true)
+    );
+  });
+
+  if (filteredUsers.length > 0) {
+    res.status(200).json(filteredUsers);
+  } else {
+    res.status(404).json({ message: "No users found matching the criteria" });
+  }
+});
+
 
 //200 - Sucess /OK
 //201 - Created
